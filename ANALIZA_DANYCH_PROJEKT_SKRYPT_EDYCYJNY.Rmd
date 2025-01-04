@@ -1,0 +1,154 @@
+---
+title: "PROJEKT Analiza Danych by Gabriela Dąbrowska, Filip Sidor & Jacek Sawka"
+date: "`r Sys.Date()`"
+output:
+  rmdformats::downcute:
+    self_contained: true
+    default_style: "light"
+    downcute_theme: "default"
+---
+
+```{r setup, include=FALSE}
+## Global options
+knitr::opts_chunk$set(cache = TRUE)
+```
+
+Projekt grupowy z przedmiotu Analiza Danych na PG. Celem będzie praca na pliku "kredyty i pożyczki": Czyszczenie danych, eksploracyjna analiza danych, praca na zmiennej celu oraz model klasyfikacyjny przyznawalności kredytów. Projekt przygotowany przez: Gabrielę Dąbrowską, Filipa Sidora, Jacka Sawkę
+
+Instalujemy potrzebne biblioteki
+
+```{r}
+install.packages("tidyverse")
+install.packages("naniar")
+install.packages("dlookr")
+install.packages("finalfit")
+install.packages("minqa")
+install.packages("md.pattern")
+install.packages("dplyr")
+```
+
+Ładujemy biblioteki
+
+```{r}
+
+#library(dlkookr)
+library(tidyverse)
+library(naniar)
+library(finalfit)
+library(minqa)
+library(mice)
+library(naniar)
+#library(md.pattern)
+library(ggplot2)
+library(dlookr)
+library(dplyr)
+```
+
+Ładujemy dane, na których będziemy pracować. Sprawdzamy strukturę danych, liczności unikalnych wartości oraz tzw. pattern wartości brakujących.
+
+```{r}
+data <- read.csv("kredyty_new.csv")
+data
+```
+
+```{r}
+str(data)
+```
+
+```{r}
+unique(data$person_age)
+unique(data$person_gender)
+unique(data$person_education)
+unique(data$person_home_ownership)
+unique(data$previous_loan_defaults_on_file)
+unique(data$person_age)
+```
+
+```{r}
+md.pattern(data)
+```
+
+```{r}
+gg_miss_upset(data = data)
+```
+
+Jak widać tylko trzy kolumny są dotknięte większymy brakami danych. Będziemy je imputować metodą MICE
+
+```{r}
+colnames(data)
+```
+
+Poprawiony wykres przedstawia, że brakami danych dotknięte są kolumny "person_age", "loan_amnt" oraz "credit_Score"
+
+```{r}
+explanatory <- c("person_age","person_income","loan_amnt","loan_percent_income","previous_loan_defaults_on_file","person_gender","person_emp_exp","loan_intent","cb_person_cred_hist_length","person_education","person_home_ownership","loan_int_rate","credit_score")
+dependent <- "loan_status"
+
+# Generowanie wykresu
+plot <- data %>% missing_pattern(dependent = dependent, explanatory = explanatory)
+
+# Rozszerzanie wykresu
+plot +
+  theme(
+    plot.title = element_text(size = 16),  # Większy tytuł
+    axis.text = element_text(size = 14),  # Większe etykiety osi
+    axis.title = element_text(size = 14), # Większe tytuły osi
+    legend.text = element_text(size = 12), # Większy tekst legendy
+    plot.margin = margin(10, 10, 10, 10, "mm"), # Zwiększenie marginesów
+    panel.spacing = unit(2, "lines")
+  )
+```
+
+Postanowiliśmy obciąć maksymalny wiek do 115 lat. Życzymy dwustu lat, ale ten wiek jest i tak odstający od średniej, co udowodnią późniejsze statystyki.
+
+```{r}
+data <- data %>% filter(person_age < 115)
+```
+
+```{r}
+unique(data$person_age)
+```
+
+Tutaj mamy łączną ilość danych brakujących
+
+```{r}
+sum(is.na(data))
+```
+
+```{r}
+colnames(data)
+```
+
+```{r}
+gg_miss_var(data) + labs(title = "Braki danych po kolumnach")
+```
+
+```{r}
+colnames(data)
+```
+
+Imputujemy dane brakujące korzystając z funkcji Mice i metody Pmm
+
+```{r}
+
+imputed_data <- mice(data, method = "pmm", m = 5, maxit = 50, seed = 123)
+
+
+# Odtworzenie pełnych danych z imputacji (wybierając jedno z imputowanych zestawów)
+data <- complete(imputed_data, 1)
+
+
+summary(data)
+
+
+```
+
+
+Sprawdźmy skuteczność imputacji
+
+```{r}
+any(is.na(data))
+
+```
+
+#################################### KONIEC CZĘŚCI JACKA
