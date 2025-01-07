@@ -152,3 +152,211 @@ any(is.na(data))
 ```
 
 #################################### KONIEC CZĘŚCI JACKA ff
+
+Kolejnym problemem jest duże odstawanie dochodów. Wynika to z kilku rzeczy, po pierwsze skala i przedział pozostałych zmiennych (porównajmy w jakim przedziale są poprawne dane wiekowe a dochodowe (nawet intuicyjnie)), po drugie mamy kilku milionerów na pokładzie. Generalnie w bankowości zarówno produkty finansowe jak i klienci są klastrowani/binowani zgdonie w ich warunkami ekonomicznymi/finansowymi. Tutaj to binowanie nie zostało zrobione, bądź zostało wykonane na tyle słabo, że tworzenie modelu na podstawie tych danych mogłoby dać dość niską moc predykcyjną.
+
+```{r}
+boxplot(data[sapply(data, is.numeric)], 
+        main = "Boxploty dla kolumn liczbowych", 
+        xlab = "Kolumny", 
+        ylab = "Wartości",
+        col = "lightblue",
+        las = 2)  
+```
+
+Liczymy podstawowe stastystyki opisowe dla danych numerycznych. Statystyki z kolumn "person_age","person_income","person_emp_exp","loan_amnt","loan_percent_income" sugerują, że dane wniosków kredytowych były zbierane od bardzo młodych ludzi z dość niskimi dochodami i z małym stopniem "zakredytowania" dodatkowo wniosky były na dośc małe kwoty. Jeśli faktycznie mielibyśmy modelować de facto pracowniczą młodzież, należałoby się zastanowić czy jest sens pozostawiać w zbiorze osoby bardzo doświadczone i zarabiające duże pieniądze. Jednak ta decyzja nie jest w scope naszego projektu.
+
+```{r}
+
+# Ustawienie opcji globalnych dla notacji liczbowej
+options(scipen = 999)
+
+# Definiowanie funkcji do obliczenia błędu standardowego
+stderr <- function(x) {
+  sd(x, na.rm = TRUE) / sqrt(length(na.omit(x)))
+}
+
+# Wybieranie kolumn numerycznych
+numeric_columns <- data[sapply(data, is.numeric)]
+
+# Tworzenie pustej ramki danych na wyniki
+all_stats <- data.frame(
+  Kolumna = character(), 
+  Mean = numeric(),
+  Median = numeric(),
+  StandardError = numeric(),
+  Min = numeric(),
+  Max = numeric(),
+  Q1 = numeric(),
+  Q3 = numeric(),
+  ContainsNegative = logical(), # Nowa kolumna
+  stringsAsFactors = FALSE
+)
+
+# Iteracja po każdej kolumnie numerycznej i obliczanie statystyk
+for (col_name in names(numeric_columns)) {
+  stats <- data.frame(
+    Kolumna = col_name,
+    Mean = format(mean(numeric_columns[[col_name]], na.rm = TRUE), scientific = FALSE),
+    Median = format(median(numeric_columns[[col_name]], na.rm = TRUE), scientific = FALSE),
+    StandardError = format(stderr(numeric_columns[[col_name]]), scientific = FALSE),
+    Min = format(min(numeric_columns[[col_name]], na.rm = TRUE), scientific = FALSE),
+    Max = format(max(numeric_columns[[col_name]], na.rm = TRUE), scientific = FALSE),
+    Q1 = format(quantile(numeric_columns[[col_name]], 0.25, na.rm = TRUE), scientific = FALSE),
+    Q3 = format(quantile(numeric_columns[[col_name]], 0.75, na.rm = TRUE), scientific = FALSE),
+    ContainsNegative = any(numeric_columns[[col_name]] < 0, na.rm = TRUE) # Sprawdzanie wartości ujemnych
+  )
+  all_stats <- rbind(all_stats, stats)  # Dodawanie statystyk do ramki danych
+}
+
+# Wyświetlenie ramki danych
+print(all_stats, row.names = FALSE)
+```
+
+Tutaj kosmetyczny szczegół, by ułamek dziesiętny zgadzął się i były tego samego stopnia dla wszystkich zmiennych.
+
+```{r}
+data$loan_int_rate <- data$loan_int_rate / 100
+```
+
+```{r}
+data
+```
+
+Tutaj postanowiliśmy jednak obciąć dochód do 1,8 miliona dolarów.
+
+```{r}
+data <- data %>% filter(person_income < 1800000)
+
+```
+
+```{r}
+max(data$person_income)
+```
+
+Te wykresy prezentują liczność obsweracji dla każdej zmiennej katagorycznej. Ważne jest zbadać ich stopień zbalansowania. Generalnie jest OK, poza "person_education" oraz "person_home_ownership", gdzie wystąpują obserwacje o marginalnie małej liczności.
+
+```{r}
+# Wybór kolumn kategorycznych/tekstowych
+categorical_columns <- data[sapply(data, is.character) | sapply(data, is.factor)]
+
+# Tworzenie wykresów dla każdej kolumny kategorycznej
+for (col_name in names(categorical_columns)) {
+  # Liczność danych
+  counts <- as.data.frame(table(categorical_columns[[col_name]]))
+  colnames(counts) <- c("Value", "Count")
+  
+  # Wykres liczności
+  p <- ggplot(counts, aes(x = Value, y = Count, fill = Value)) +
+    geom_bar(stat = "identity", color = "black") +
+    labs(
+      title = paste("Liczność danych dla kolumny:", col_name),
+      x = "Wartości",
+      y = "Liczba wystąpień"
+    ) +
+    theme_minimal() +
+    theme(
+      axis.text.x = element_text(angle = 45, hjust = 1),
+      plot.title = element_text(hjust = 0.5, size = 16)
+    ) +
+    scale_fill_brewer(palette = "Set3")
+  
+  # Wyświetlenie wykresu
+  print(p)
+}
+
+```
+
+```{r}
+boxplot(data[sapply(data, is.numeric)], 
+        main = "Boxploty dla kolumn liczbowych", 
+        xlab = "Kolumny", 
+        ylab = "Wartości",
+        col = "lightblue",
+        las = 2) 
+```
+
+Jak widać, nie ma już żadnych danych brakujących.
+
+```{r}
+# Heatmap braków danych
+gg_miss_var(data) + 
+  labs(title = "Braki danych w kolumnach") +
+  theme_minimal()
+
+# Sprawdzenie braków danych w liczbach
+summary(data)
+```
+
+```{r}
+explanatory <- c("person_age","person_income","loan_amnt","loan_percent_income","previous_loan_defaults_on_file","person_gender","person_emp_exp","loan_intent","cb_person_cred_hist_length","person_education","person_home_ownership","loan_int_rate","credit_score")
+dependent <- "loan_status"
+
+# Generowanie wykresu
+plot <- data %>% missing_pattern(dependent = dependent, explanatory = explanatory)
+
+# Rozszerzanie wykresu
+plot +
+  theme(
+    plot.title = element_text(size = 16),  # Większy tytuł
+    axis.text = element_text(size = 14),  # Większe etykiety osi
+    axis.title = element_text(size = 14), # Większe tytuły osi
+    legend.text = element_text(size = 12), # Większy tekst legendy
+    plot.margin = margin(10, 10, 10, 10, "mm"), # Zwiększenie marginesów
+    panel.spacing = unit(2, "lines")
+  )
+
+```
+
+Histogramy wieku i dochodu
+
+```{r}
+# Histogram dla wieku
+ggplot(data, aes(x = person_age)) +
+  geom_histogram(binwidth = 5, fill = "blue", color = "black", alpha = 0.7) +
+  labs(title = "Histogram wieku", x = "Wiek", y = "Częstość") +
+  theme_minimal()
+
+# Histogram dla dochodu
+ggplot(data, aes(x = person_income)) +
+  geom_histogram(binwidth = 10000, fill = "green", color = "black", alpha = 0.7) +
+  labs(title = "Histogram dochodu", x = "Dochód", y = "Częstość") +
+  theme_minimal()
+
+```
+
+
+Boxploty dla wieku i dochodu. Dalej występują wartości odstające, ale dopóki nie zdecydujemy się na standaryzację dla wszystkich zmiennych, to nic z tym nie zrobimy. Jednakże standaryzacja powinna mieć miejsce przed samym modelowaniem i po testach statystycznych.
+
+```{r}
+# Boxplot dla wieku
+ggplot(data, aes(y = person_age)) +
+  geom_boxplot(fill = "orange", color = "black") +
+  labs(title = "Boxplot wieku", y = "Wiek") +
+  theme_minimal()
+
+# Boxplot dla dochodu
+ggplot(data, aes(y = person_income)) +
+  geom_boxplot(fill = "lightblue", color = "black") +
+  labs(title = "Boxplot dochodu", y = "Dochód") +
+  theme_minimal()
+
+```
+
+Ten sam wykres liczności
+
+```{r}
+# Wykres słupkowy dla celu pożyczki (loan_intent)
+ggplot(data, aes(x = loan_intent)) +
+  geom_bar(fill = "purple", color = "black") +
+  labs(title = "Cel pożyczki", x = "Cel", y = "Liczba") +
+  theme_minimal()
+
+# Wykres słupkowy dla własności domu (person_home_ownership)
+ggplot(data, aes(x = person_home_ownership)) +
+  geom_bar(fill = "cyan", color = "black") +
+  labs(title = "Status własności domu", x = "Status", y = "Liczba") +
+  theme_minimal()
+
+
+```
