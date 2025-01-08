@@ -362,3 +362,214 @@ ggplot(data, aes(x = person_home_ownership)) +
 ```
 
 ####################################################
+Wykres dochód vs. kwota pożyczki vs. posiadanie domu (status) / intencja kredytu / historia poprzednich defaltuów. Wniosków jest kilka: 1. Bez względu na kwotę wnioskowanej pożyczki osoby o mniejszych dochodach żyją w mieszkaniach wynajmowanych. Na pewnym poziomie dochódów dochodzi do odcięcia i ludzie zaczynają żyć na domach wziętych pod kredyt hipoteczny. 2. Intencja kredytu nie zmienia się wraz z kwotą i dochodami, wszędzie występują te same intencje. 3. Bez względu na kwotę wnioskwoanej pożyczki osoby o mniejszych dochodach mają mniejszą tendencję do wpadania w defaulty. Na pewnym poziomie dochodów dochodzi do odcięcia i ludzie zaczynają odnotowalnie wpadać w defalty. Może to wynikać z sugerowanego faktu, iż osoby o małych dochodach nie wpadły wcześniej w defalty, ponieważ nie miały wcześniej kredytów do spłaty.
+
+```{r}
+
+# Wykres punktowy: Dochód vs Kwota pożyczki
+ggplot(data, aes(x = person_income, y = loan_amnt, color=person_home_ownership)) +
+  geom_point(alpha = 0.9) +
+  labs(title = "Dochód vs Kwota pożyczki",
+       x = "Dochód", 
+       y = "Kwota pożyczki",
+       color = "Status własności domu") +
+  theme_minimal()
+
+ggplot(data, aes(x = person_income, y = loan_amnt, color=loan_intent)) +
+  geom_point(alpha = 0.9) +
+  labs(title = "Dochód vs Kwota pożyczki",
+       x = "Dochód", 
+       y = "Kwota pożyczki",
+       color = "cel pożyczki") +
+  theme_minimal()
+
+ggplot(data, aes(x = person_income, y = loan_amnt, color=previous_loan_defaults_on_file)) +
+  geom_point(alpha = 0.9) +
+  labs(title = "Dochód vs Kwota pożyczki",
+       x = "Dochód", 
+       y = "Kwota pożyczki",
+       color = "czy klient miał defaulty") +
+  theme_minimal()
+
+```
+
+Różne wykresy wartości sytuacji demograficznych vs. parametrów aplikacyjnych i danych ekonomicznych.Najbardziej czytelny wykres to dochód vs. wynik kredytowy vs. dotychczasowe defaulty klienta. Mamy formację piramidalną, Gdzie dochód najbardziej wyrasta paradoksalnie z przeciętnego wyniku kredytowego. Defaulty w historii kredytowej są zauważalne dopiero od pewnej powyżej minimalnej wartości obserwowalnych dochodów.
+
+```{r}
+ggplot(data, aes(x = person_age, y = loan_amnt, color=person_home_ownership)) +
+  geom_point(alpha = 0.9) +
+  labs(title = "Wiek vs Kwota pożyczki",
+       x = "Wiek", 
+       y = "Kwota pożyczki",
+       color = "Status własności domu") +
+  theme_minimal()
+
+ggplot(data, aes(x = person_age, y = loan_amnt, color=person_education)) +
+  geom_point(alpha = 0.9) +
+  labs(title = "Wiek vs Kwota pożyczki",
+       x = "wiek", 
+       y = "Kwota pożyczki",
+       color = "edukacja") +
+  theme_minimal()
+
+ggplot(data, aes(x = person_income, y = credit_score, color=previous_loan_defaults_on_file)) +
+  geom_point(alpha = 0.9) +
+  labs(title = "Dochód vs wynik kredytowy",
+       x = "Dochód", 
+       y = "wynik kredytowy",
+       color = "czy klient miał defaulty") +
+  theme_minimal()
+
+```
+
+Heatmapa korelacji dla danych numerycznych. Dość duża korelacja występuje między danymi: person_age - person_emp_exp , person_age - cb_person_cred_hist_length , person_emp_exp - cb_person_cred_hist_length. Intuicyjnie ma to sens.
+
+```{r}
+# Wybór tylko zmiennych liczbowych
+numeric_data <- data %>% select_if(is.numeric)
+
+# Macierz korelacji
+cor_matrix <- cor(numeric_data, use = "complete.obs")
+
+# Wizualizacja korelacji
+library(corrplot)
+corrplot(cor_matrix, method = "color", type = "upper", tl.cex = 0.8)
+
+
+```
+
+Wykresy punktowe z nałożoną funkcją regresyjną. Brak nowych wniosków poza jednym, gdzie bardzo wysokie kwoty pożyczej są na dość niskie oprocentowania, wynikające prawdopodobnie z niskiego ryzyka kredytowego klienta. Relacja wieku i historii kredytowej niemalże doskonale liniowa.
+
+```{r}
+library(ggplot2)
+
+# Zmienna dochód vs kwota pożyczki
+ggplot(data, aes(x = person_income, y = loan_amnt, color=loan_intent)) +
+  geom_point(alpha = 0.6) +
+  geom_smooth(method = "lm", se = TRUE, color = "red") +
+  labs(title = "Dochód vs Kwota pożyczki", 
+       x = "Dochód", 
+       y = "Kwota pożyczki",
+       color= "cel pożyczki") +
+  theme_minimal()
+
+# Zmienna dochód vs oprocentowanie pożyczki
+ggplot(data, aes(x = person_income, y = loan_int_rate)) +
+  geom_point(alpha = 0.6, color = "green") +
+  geom_smooth(method = "lm", se = TRUE, color = "red") +
+  labs(title = "Dochód vs Oprocentowanie pożyczki", x = "Dochód", y = "Oprocentowanie pożyczki") +
+  theme_minimal()
+
+# Zmienna wiek vs długość historii kredytowej
+ggplot(data, aes(x = person_age, y = cb_person_cred_hist_length)) +
+  geom_point(alpha = 0.6, color = "orange") +
+  geom_smooth(method = "lm", se = TRUE, color = "red") +
+  labs(title = "Wiek vs Długość historii kredytowej", x = "Wiek", y = "Długość historii kredytowej") +
+  theme_minimal()
+
+
+```
+
+```{r}
+data %>% colnames()
+```
+
+Wykresy dochód vs kwota pożyczki oraz obciążenie kredytem vs. kwota kredytu. Obciążenie kredytem vs. kwota kredytu ma zauważalną liniową relację z dużym błędem. W przypadku dochód vs kwota pożyczki błąd wizualny jest zbyt duży, by określić liniową zależność.
+
+```{r}
+# Zmienna dochód vs kwota pożyczki
+ggplot(data, aes(x =person_emp_exp , y = person_income)) +
+  geom_point(alpha = 0.6, color = "blue") +
+  geom_smooth(method = "lm", se = TRUE, color = "red") +
+  labs(title = "Doświadczenie vs. Dochód ", x = "Doświadczenie", y = "Dochód") +
+  theme_minimal()
+
+# Zmienna obciążenie kredytem vs oprocentowanie pożyczki
+ggplot(data, aes(x = loan_percent_income, y = loan_amnt)) +
+  geom_point(alpha = 0.6, color = "green") +
+  geom_smooth(method = "lm", se = TRUE, color = "red") +
+  labs(title = "Obciążenie kredytem vs kwota kredytu ", x = "Obciążenie kredytem", y = "Kwota kredyttu") +
+  theme_minimal()
+
+
+
+```
+
+```{r}
+data %>% colnames()
+```
+
+Wykres doświadczenie vs. kwota kredytu pokazuje raczej, że największe kwoty kredytu są brane wnioskowane przez klientów o małym doświadczeniu zawodowym.
+
+```{r}
+
+
+# Zmienna doświadczenie vs. kwota kredytu
+ggplot(data, aes(x =person_emp_exp , y =loan_amnt )) +
+  geom_point(alpha = 0.6, color = "blue") +
+  geom_smooth(method = "lm", se = TRUE, color = "red") +
+  labs(title = "Doświadczenie vs. kwota kredytu ", x = "Doświadczenie", y = "kwota kredytu") +
+  theme_minimal()
+
+```
+
+Wykres cel kredytu vs doświadczenie jest nieinformatywny, lecz widać wartości odstające formujące się we wniosek, że osoby o dużym doświadczeniu (osoby starsze) biorą dużo kredytów w celu pokrycia zobowiązań za usługi medyczne.
+
+```{r}
+ggplot(data, aes(x =loan_intent , y =person_emp_exp )) +
+  geom_point(alpha = 0.6, color = "blue") +
+  geom_smooth(method = "lm", se = TRUE, color = "red") +
+  labs(title = "cel kredytu vs doświadczenie ", x = "cel kredytu", y = "doświadczenie") +
+  theme_minimal()
+
+```
+
+Tutaj też widać, że osoby doświadczone (starsze) mają tendencję do mieszkaniu w wynajętych domach.
+
+```{r}
+
+
+ggplot(data, aes(x =person_home_ownership , y =person_emp_exp )) +
+  geom_point(alpha = 0.6, color = "blue") +
+  geom_smooth(method = "lm", se = TRUE, color = "red") +
+  labs(title = "stan posiadania domu vs doświadczenie ", x = "stan posiadania domu", y = "doświadczenie") +
+  theme_minimal()
+
+```
+
+Histogram kwoty pożyczki w zależności od wczesniejszych defaultów. Widać, że zachowana jest pewna proporcja i im więcej wystąpień o daną kwotę pożyczki tym więcej było historii defaultu na daną kwotę, vide 10 000 dolarów.
+
+```{r}
+ggplot(data, aes(x = loan_amnt, fill = previous_loan_defaults_on_file)) +
+  geom_histogram(binwidth = 100, alpha = 0.7) +
+  labs(
+    title = "Histogram kwoty pożyczki w zależności od wcześniejszych zaległości",
+    x = "Kwota pożyczki",
+    y = "Częstość",
+    fill = "Zaległości w spłatach"
+  ) +
+  theme_minimal()
+```
+
+Ten sam histogram z użyciem pakietu plotly, niestety interfejs jest mało intuicyjny.
+
+```{r}
+
+install.packages("plotly")
+library(plotly)
+
+# Tworzenie wykresu ggplot2
+p <- ggplot(data, aes(x = loan_amnt, fill = previous_loan_defaults_on_file)) +
+  geom_histogram(binwidth = 100, alpha = 0.7) +
+  labs(
+    title = "Histogram kwoty pożyczki w zależności od wcześniejszych zaległości",
+    x = "Kwota pożyczki",
+    y = "Częstość",
+    fill = "Zaległości w spłatach"
+  ) +
+  theme_minimal()
+
+# Konwersja do wykresu interaktywnego
+ggplotly(p)
+```
+####################################################
