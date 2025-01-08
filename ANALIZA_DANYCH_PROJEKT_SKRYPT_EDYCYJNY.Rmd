@@ -72,7 +72,7 @@ md.pattern(data)
 gg_miss_upset(data = data)
 ```
 
-Jak widać tylko trzy kolumny są dotknięte większymy brakami danych. Będziemy je imputować metodą MICE
+Jak widać, tylko trzy kolumny są dotknięte większymi brakami danych. Będziemy je imputować metodą MICE
 
 ```{r}
 colnames(data)
@@ -99,7 +99,7 @@ plot +
   )
 ```
 
-Postanowiliśmy obciąć maksymalny wiek do 115 lat. Życzymy dwustu lat, ale ten wiek jest i tak odstający od średniej, co udowodnią późniejsze statystyki.
+Postanowiliśmy obciąć maksymalny wiek do 115 lat. Życzymy dwustu lat i więcej, ale ten wiek jest i tak odstający od średniej, co udowodnią późniejsze statystyki.
 
 ```{r}
 data <- data %>% filter(person_age < 115)
@@ -109,7 +109,7 @@ data <- data %>% filter(person_age < 115)
 unique(data$person_age)
 ```
 
-Tutaj mamy łączną ilość danych brakujących
+Tutaj mamy łączną ilość danych brakujących.
 
 ```{r}
 sum(is.na(data))
@@ -127,7 +127,7 @@ gg_miss_var(data) + labs(title = "Braki danych po kolumnach")
 colnames(data)
 ```
 
-Imputujemy dane brakujące korzystając z funkcji Mice i metody Pmm
+Imputujemy dane brakujące korzystając z funkcji Mice i metody PMM.
 
 ```{r} 
 
@@ -144,16 +144,16 @@ summary(data)
 ```
 
 
-Sprawdźmy skuteczność imputacji
+Sprawdźmy skuteczność imputacji.
 
 ```{r}
 any(is.na(data))
 
 ```
 
-#################################### KONIEC CZĘŚCI JACKA ff
+#################################### KONIEC CZĘŚCI JACKA 
 
-Kolejnym problemem jest duże odstawanie dochodów. Wynika to z kilku rzeczy, po pierwsze skala i przedział pozostałych zmiennych (porównajmy w jakim przedziale są poprawne dane wiekowe a dochodowe (nawet intuicyjnie)), po drugie mamy kilku milionerów na pokładzie. Generalnie w bankowości zarówno produkty finansowe jak i klienci są klastrowani/binowani zgdonie w ich warunkami ekonomicznymi/finansowymi. Tutaj to binowanie nie zostało zrobione, bądź zostało wykonane na tyle słabo, że tworzenie modelu na podstawie tych danych mogłoby dać dość niską moc predykcyjną.
+Kolejnym problemem jest duże odstawanie dochodów. Wynika to z kilku rzeczy. Po pierwsze skala i przedział pozostałych zmiennych (porównajmy w jakim przedziale są poprawne dane wiekowe a dochodowe (nawet intuicyjnie)), po drugie mamy kilku milionerów na pokładzie. Generalnie w bankowości zarówno produkty finansowe jak i klienci są klastrowani/binowani zgodnie w ich warunkami ekonomicznymi/finansowymi. Tutaj to binowanie nie zostało zrobione, bądź zostało wykonane na tyle słabo, że tworzenie modelu na podstawie tych danych mogłoby dać dość niską moc predykcyjną.
 
 ```{r}
 boxplot(data[sapply(data, is.numeric)], 
@@ -164,7 +164,7 @@ boxplot(data[sapply(data, is.numeric)],
         las = 2)  
 ```
 
-Liczymy podstawowe stastystyki opisowe dla danych numerycznych. Statystyki z kolumn "person_age","person_income","person_emp_exp","loan_amnt","loan_percent_income" sugerują, że dane wniosków kredytowych były zbierane od bardzo młodych ludzi z dość niskimi dochodami i z małym stopniem "zakredytowania" dodatkowo wniosky były na dośc małe kwoty. Jeśli faktycznie mielibyśmy modelować de facto pracowniczą młodzież, należałoby się zastanowić czy jest sens pozostawiać w zbiorze osoby bardzo doświadczone i zarabiające duże pieniądze. Jednak ta decyzja nie jest w scope naszego projektu.
+Liczymy podstawowe stastystyki opisowe dla danych numerycznych. Statystyki z kolumn "person_age","person_income","person_emp_exp","loan_amnt","loan_percent_income" sugerują, że dane wniosków kredytowych były zbierane od bardzo młodych ludzi z dość niskimi dochodami i z małym stopniem "zakredytowania", dodatkowo wnioski były na dość małe kwoty. Jeśli faktycznie mielibyśmy modelować de facto pracowniczą młodzież, należałoby się zastanowić czy jest sens pozostawiać w zbiorze osoby bardzo doświadczone i zarabiające duże pieniądze. Jednak ta decyzja nie jest w scope naszego projektu.
 
 ```{r}
 
@@ -223,7 +223,7 @@ data$loan_int_rate <- data$loan_int_rate / 100
 data
 ```
 
-Tutaj postanowiliśmy jednak obciąć dochód do 1,8 miliona dolarów.
+Tutaj postanowiliśmy jednak obciąć dochód do 1,8 miliona.
 
 ```{r}
 data <- data %>% filter(person_income < 1800000)
@@ -309,6 +309,26 @@ plot +
 ```
 
 Histogramy wieku i dochodu
+```{r}
+colnames(data)
+```
+```{r}
+for (i in colnames(data)) {
+  if (is.numeric(data[[i]])) {
+    p <- ggplot(data, aes_string(x = i)) +
+      geom_histogram(binwidth = 10, fill = "blue", color = "black", alpha = 0.7) +
+      labs(
+        title = paste0(i, " histogram"),
+        x = i,
+        y = "Częstość"
+      ) +
+      theme_minimal()
+    
+    print(p)
+  }
+}
+```
+
 
 ```{r}
 # Histogram dla wieku
@@ -322,6 +342,48 @@ ggplot(data, aes(x = person_income)) +
   geom_histogram(binwidth = 10000, fill = "green", color = "black", alpha = 0.7) +
   labs(title = "Histogram dochodu", x = "Dochód", y = "Częstość") +
   theme_minimal()
+
+ggplot(data, aes(x = loan_amnt)) +
+  geom_histogram(binwidth = 10000, fill = "yellow", color = "black", alpha = 0.7) +
+  labs(title = "Histogram dochodu", x = "Dochód", y = "Częstość") +
+  theme_minimal()
+
+ggplot(data, aes(x = loan_percent_income)) +
+  geom_histogram(binwidth = 10000, fill = "red", color = "black", alpha = 0.7) +
+  labs(title = "Histogram dochodu", x = "Dochód", y = "Częstość") +
+  theme_minimal()
+
+
+
+ggplot(data, aes(x = person_emp_exp)) +
+  geom_histogram(binwidth = 10000, fill = "black", color = "black", alpha = 0.7) +
+  labs(title = "Histogram dochodu", x = "Dochód", y = "Częstość") +
+  theme_minimal()
+
+
+
+ggplot(data, aes(x = cb_person_cred_hist_length)) +
+  geom_histogram(binwidth = 10000, fill = "green", color = "black", alpha = 0.7) +
+  labs(title = "Histogram dochodu", x = "Dochód", y = "Częstość") +
+  theme_minimal()
+
+ggplot(data, aes(x = loan_status)) +
+  geom_histogram(binwidth = 10000, fill = "yellow", color = "black", alpha = 0.7) +
+  labs(title = "Histogram dochodu", x = "Dochód", y = "Częstość") +
+  theme_minimal()
+
+
+ggplot(data, aes(x = loan_int_rate)) +
+  geom_histogram(binwidth = 10000, fill = "green", color = "black", alpha = 0.7) +
+  labs(title = "Histogram dochodu", x = "Dochód", y = "Częstość") +
+  theme_minimal()
+
+ggplot(data, aes(x = credit_score)) +
+  geom_histogram(binwidth = 10000, fill = "green", color = "black", alpha = 0.7) +
+  labs(title = "Histogram dochodu", x = "Dochód", y = "Częstość") +
+  theme_minimal()
+
+
 
 ```
 
@@ -646,8 +708,25 @@ ggplot(data, aes(x = person_education, y = person_home_ownership, color=loan_sta
        color = "status przyznania kredytu") +
   theme_minimal()
 
+ggplot(data, aes(x = loan_int_rate, y = loan_amnt, color=loan_status)) +
+  geom_point(alpha = 0.9) +
+  labs(title = "oprocentowanie vs. kwota kredytu",
+       x = "oprocentowanie", 
+       y = "kwoata kredytu",
+       color = "status przyznania kredytu") +
+  theme_minimal()
+
+ggplot(data, aes(x = loan_int_rate, y = person_income, color=loan_status)) +
+  geom_point(alpha = 0.9) +
+  labs(title = "oprocentowanie vs. dochody",
+       x = "oprocentowanie", 
+       y = "dochody",
+       color = "status przyznania kredytu") +
+  theme_minimal()
+
+
 ```
-WNIOSEK: Jaki nasywa się z analizy danych jest następujący - O przyznawalności kredytów najprawdopodobniej nie decydyją parametry beharwioralne. Oczywiście historia defaultów jest czynnikiem przekreślającym możliwość przynania kredytu. Moim zdaniem jest to program preferencyjnych kredytów np. przyznawanych przez gminę/urząd miasta/community. Być może jest to program tzw. kredytów preferencyjnych, które mają bardzo dobrą ofertę (są tanie), ale jest ograniczona pula przyznań i wydawane są tylko dla ludzi o określonych (dość niskich) dochodach, krótkiej, ale nienagannej historii kredytowej bez własnego domu i z dość krótkim doświadczeniem zawodowym. Ciekawy jest wniosek z wykresu obciązenie kredytem vs. dochody vs. status przyznania kredytu. Tutaj przyznawalność jest zdecydowanie udzielana dla niskich dochodów, ale nawet przy dużym stopniu obciążenia dotychczasowymi pożyczkami.
+WNIOSEK: Jaki nasuwa się z analizy danych jest następujący - O przyznawalności kredytów najprawdopodobniej nie decydyją parametry beharwioralne. Oczywiście historia defaultów jest czynnikiem przekreślającym możliwość przynania kredytu. Moim zdaniem jest to program preferencyjnych kredytów np. przyznawanych przez gminę/urząd miasta/community. Być może jest to program tzw. kredytów preferencyjnych, które mają bardzo dobrą ofertę (są tanie), ale jest ograniczona pula przyznań i wydawane są tylko dla ludzi o określonych (dość niskich) dochodach, krótkiej, ale nienagannej historii kredytowej bez własnego domu i z dość krótkim doświadczeniem zawodowym. Ciekawy jest wniosek z wykresu obciązenie kredytem vs. dochody vs. status przyznania kredytu. Tutaj przyznawalność jest zdecydowanie udzielana dla niskich dochodów, ale nawet przy dużym stopniu obciążenia dotychczasowymi pożyczkami.
 
 ```{r}
 ```
