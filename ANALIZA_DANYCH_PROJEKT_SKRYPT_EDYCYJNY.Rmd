@@ -572,4 +572,4 @@ p <- ggplot(data, aes(x = loan_amnt, fill = previous_loan_defaults_on_file)) +
 # Konwersja do wykresu interaktywnego
 ggplotly(p)
 ```
-####################################################
+#####################################################
