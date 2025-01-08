@@ -129,7 +129,7 @@ colnames(data)
 
 Imputujemy dane brakujące korzystając z funkcji Mice i metody Pmm
 
-```{r}
+```{r} 
 
 imputed_data <- mice(data, method = "pmm", m = 5, maxit = 50, seed = 123)
 
@@ -573,3 +573,86 @@ p <- ggplot(data, aes(x = loan_amnt, fill = previous_loan_defaults_on_file)) +
 ggplotly(p)
 ```
 #####################################################
+
+Ponieważ dane do pracy zawierają binarną zmienną celu "loan_status" stworzoną stricte pod model klasyfikacyjny uczenia maszynowego, dokonam teraz zestawu wizualnych analiz dla wspomnianych wcześniej zmiennych objasniających, by (być może) dokonać intuycyjnego sprawdzenia jakie parametry przyczyniają się do pozytywnej decyzji ws. przyznania krdytu. Oczywiście takie sprawdzenie bez odbpowiedniego, numerycznego algorytmu klasyfikacyjnego nie ma żadnej mocy predykcyjnej, ale dokonanie jej może w pewnien sposób zawęzić spektrum istotnych i ciążących na decyzji zmiennych.
+
+```{r}
+colnames(data)
+```
+
+
+```{r}
+ggplot(data, aes(x = person_age, y = loan_amnt, color=loan_status)) +
+  geom_point(alpha = 0.9) +
+  labs(title = "Wiek vs Kwota pożyczki",
+       x = "Wiek", 
+       y = "Kwota pożyczki",
+       color = "Status przyznania kredytu") +
+  theme_minimal()
+
+ggplot(data, aes(x = person_age, y = person_income, color=loan_status)) +
+  geom_point(alpha = 0.9) +
+  labs(title = "Wiek vs Dochody",
+       x = "wiek", 
+       y = "Dochody",
+       color = "Status przyznania kredytu") +
+  theme_minimal()
+
+ggplot(data, aes(x = person_income, y = previous_loan_defaults_on_file, color=loan_status)) +
+  geom_point(alpha = 0.9) +
+  labs(title = "Dochód vs defaulty w historii",
+       x = "Dochód", 
+       y = "defaluty",
+       color = "status przyznania kredytu") +
+  theme_minimal()
+
+ggplot(data, aes(x = cb_person_cred_hist_length, y = credit_score, color=loan_status)) +
+  geom_point(alpha = 0.9) +
+  labs(title = "historia kredytowa vs wynik kredytowy",
+       x = "historia kredytowa", 
+       y = "wynik kredytowy",
+       color = "status przyznania kredytu") +
+  theme_minimal()
+
+ggplot(data, aes(x = person_gender, y = person_income, color=loan_status)) +
+  geom_point(alpha = 0.9) +
+  labs(title = "płeć vs dochody",
+       x = "płeć", 
+       y = "dochody",
+       color = "status przyznania kredytu") +
+  theme_minimal()
+
+ggplot(data, aes(x = loan_percent_income, y = credit_score, color=loan_status)) +
+  geom_point(alpha = 0.9) +
+  labs(title = "obciążenie kredytem vs credit score",
+       x = "obciążenie kredytem", 
+       y = "credit score",
+       color = "status przyznania kredytu") +
+  theme_minimal()
+
+ggplot(data, aes(x = loan_percent_income, y = person_income, color=loan_status)) +
+  geom_point(alpha = 0.9) +
+  labs(title = "obciążenie kredytem vs dochody",
+       x = "obciążenie kredytem", 
+       y = "dochody",
+       color = "status przyznania kredytu") +
+  theme_minimal()
+
+ggplot(data, aes(x = person_education, y = person_home_ownership, color=loan_status)) +
+  geom_point(alpha = 0.9) +
+  labs(title = "edukacja vs status posiadania domu",
+       x = "edukacja", 
+       y = "status posiadania domu",
+       color = "status przyznania kredytu") +
+  theme_minimal()
+
+```
+WNIOSEK: Jaki nasywa się z analizy danych jest następujący - O przyznawalności kredytów najprawdopodobniej nie decydyją parametry beharwioralne. Oczywiście historia defaultów jest czynnikiem przekreślającym możliwość przynania kredytu. Moim zdaniem jest to program preferencyjnych kredytów np. przyznawanych przez gminę/urząd miasta/community. Być może jest to program tzw. kredytów preferencyjnych, które mają bardzo dobrą ofertę (są tanie), ale jest ograniczona pula przyznań i wydawane są tylko dla ludzi o określonych (dość niskich) dochodach, krótkiej, ale nienagannej historii kredytowej bez własnego domu i z dość krótkim doświadczeniem zawodowym. Ciekawy jest wniosek z wykresu obciązenie kredytem vs. dochody vs. status przyznania kredytu. Tutaj przyznawalność jest zdecydowanie udzielana dla niskich dochodów, ale nawet przy dużym stopniu obciążenia dotychczasowymi pożyczkami.
+
+```{r}
+```
+
+
+```{r}
+```
+
