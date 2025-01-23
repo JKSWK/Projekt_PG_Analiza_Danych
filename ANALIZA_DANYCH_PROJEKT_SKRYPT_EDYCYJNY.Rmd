@@ -164,38 +164,6 @@ Liczymy podstawowe stastystyki opisowe dla danych numerycznych. Statystyki z kol
 
 
 
-```{r echo=TRUE, message=FALSE, warning=FALSE, results='asis'}
-
-# Wyodrębnienie zmiennych numerycznych
-# Wyodrębnienie zmiennych numerycznych
-numeric_vars <- data %>% select_if(is.numeric)
-
-# Obliczenie statystyk opisowych
-stats_summary <- numeric_vars %>% summarise(across(everything(), list(
-  mean = ~ mean(., na.rm = TRUE),
-  median = ~ median(., na.rm = TRUE),
-  sd = ~ sd(., na.rm = TRUE),
-  min = ~ min(., na.rm = TRUE),
-  max = ~ max(., na.rm = TRUE),
-  q1 = ~ quantile(., 0.25, na.rm = TRUE),
-  q3 = ~ quantile(., 0.75, na.rm = TRUE),
-  containsnegative = ~ any(. < 0, na.rm = TRUE),
-  kurtosis = ~ kurtosis(., na.rm = TRUE),
-  skewness = ~ skewness(., na.rm = TRUE),
-  iqr = ~ IQR(., na.rm = TRUE)
-))) %>% pivot_longer(cols = everything(), names_to = c("variable", "statistic"), names_sep = "_")
-
-# Przekształcenie wyników do formatu tabeli
-stats_table <- stats_summary %>% 
-  pivot_wider(names_from = statistic, values_from = value)
-
-# Eksport wyników do tabeli markdown
-kable(stats_table, caption = "Statystyki opisowe dla zmiennych numerycznych")
-
-
-
-```
-
 ```{r}
 stats_table
 ```
