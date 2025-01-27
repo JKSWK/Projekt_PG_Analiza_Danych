@@ -39,9 +39,14 @@ library(ggplot2)
 library(dlookr)
 library(dplyr)
 library(kableExtra)
+library(ggstatsplot)
 ```
 
+
+
+
 Ładujemy dane, na których będziemy pracować. Sprawdzamy strukturę danych, liczności unikalnych wartości oraz tzw. pattern wartości brakujących.
+
 
 ```{r, include= FALSE, message=FALSE,warning=FALSE}
 data <- read.csv("kredyty_new.csv")
@@ -715,8 +720,126 @@ ggplot(data, aes(x = loan_int_rate, y = person_income, color=loan_status)) +
 
 WNIOSEK: Jaki nasuwa się z analizy danych jest następujący - O przyznawalności kredytów najprawdopodobniej nie decydyją parametry beharwioralne. Oczywiście historia defaultów jest czynnikiem przekreślającym możliwość przynania kredytu. Moim zdaniem jest to program preferencyjnych kredytów np. przyznawanych przez gminę/urząd miasta/community. Być może jest to program tzw. kredytów preferencyjnych, które mają bardzo dobrą ofertę (są tanie), ale jest ograniczona pula przyznań i wydawane są tylko dla ludzi o określonych (dość niskich) dochodach, krótkiej, ale nienagannej historii kredytowej bez własnego domu i z dość krótkim doświadczeniem zawodowym. Ciekawy jest wniosek z wykresu obciązenie kredytem vs. dochody vs. status przyznania kredytu. Tutaj przyznawalność jest zdecydowanie udzielana dla niskich dochodów, ale nawet przy dużym stopniu obciążenia dotychczasowymi pożyczkami.
 
-```{r}
+###### testy statystyczne. 
+
+```{r, include= TRUE, message=FALSE,warning=FALSE}
+print(colnames(data))
+print(data)
 ```
 
-```{r}
+```{r, include= TRUE, message=FALSE,warning=FALSE}
+ggwithinstats(data = data,
+              x = previous_loan_defaults_on_file,
+              y = person_income,
+              pairwise.display="s"
+              )
+
+ggwithinstats(data = data,
+              x = previous_loan_defaults_on_file,
+              y = loan_amnt,
+              pairwise.display="s"
+              )
+ggwithinstats(data = data,
+              x = previous_loan_defaults_on_file,
+              y = loan_percent_income,
+              pairwise.display="s"
+              )
+
+```
+
+```{r, include= TRUE, message=FALSE,warning=FALSE}
+ggscatterstats(
+  data = data,
+  x = loan_int_rate,
+  y = loan_amnt
+)
+
+
+ggscatterstats(
+  data = data,
+  x = loan_percent_income,
+  y = loan_amnt
+)
+
+
+
+ggscatterstats(
+  data = data,
+  x = credit_score,
+  y = loan_amnt
+)
+
+
+ggscatterstats(
+  data = data,
+  x = credit_score,
+  y = loan_amnt
+)
+
+ggscatterstats(
+  data = data,
+  x = person_education,
+  y = loan_int_rate
+)
+
+ggscatterstats(
+  data = data,
+  x = person_education,
+  y = loan_int_rate
+)
+
+
+
+```
+
+```{r, include= TRUE, message=FALSE,warning=FALSE}
+
+ggpiestats(
+  data=data,
+  x = previous_loan_defaults_on_file,
+  y = person_education
+  
+)
+
+ggpiestats(
+  data=data,
+  x = loan_status,
+  y = person_education
+  
+)
+
+
+ggpiestats(
+  data=data,
+  x = previous_loan_defaults_on_file,
+  y = person_home_ownership
+  
+)
+
+
+ggpiestats(
+  data=data,
+  x = person_education,
+  y = person_home_ownership
+  
+)
+
+ggpiestats(
+  data=data,
+  x = loan_intent,
+  y = person_home_ownership
+  
+)
+
+
+
+
+
+
+```
+
+```{r, include= TRUE, message=FALSE,warning=FALSE}
+```
+
+```{r, include= TRUE, message=FALSE,warning=FALSE}
 ```
