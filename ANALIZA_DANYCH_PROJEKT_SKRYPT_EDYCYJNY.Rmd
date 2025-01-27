@@ -608,7 +608,7 @@ ggplot(data, aes(x = loan_amnt, fill = previous_loan_defaults_on_file)) +
 Ten sam histogram z użyciem pakietu plotly, niestety interfejs jest mało intuicyjny.
 
 ```{r, include= TRUE, message=FALSE,warning=FALSE}
-
+#install.packages("plotly")
 library(plotly)
 
 # Tworzenie wykresu ggplot2
@@ -720,6 +720,7 @@ ggplot(data, aes(x = loan_int_rate, y = person_income, color=loan_status)) +
 
 WNIOSEK: Jaki nasuwa się z analizy danych jest następujący - O przyznawalności kredytów najprawdopodobniej nie decydyją parametry beharwioralne. Oczywiście historia defaultów jest czynnikiem przekreślającym możliwość przynania kredytu. Moim zdaniem jest to program preferencyjnych kredytów np. przyznawanych przez gminę/urząd miasta/community. Być może jest to program tzw. kredytów preferencyjnych, które mają bardzo dobrą ofertę (są tanie), ale jest ograniczona pula przyznań i wydawane są tylko dla ludzi o określonych (dość niskich) dochodach, krótkiej, ale nienagannej historii kredytowej bez własnego domu i z dość krótkim doświadczeniem zawodowym. Ciekawy jest wniosek z wykresu obciązenie kredytem vs. dochody vs. status przyznania kredytu. Tutaj przyznawalność jest zdecydowanie udzielana dla niskich dochodów, ale nawet przy dużym stopniu obciążenia dotychczasowymi pożyczkami.
 
+<<<<<<< HEAD
 ###### testy statystyczne. 
 
 ```{r, include= TRUE, message=FALSE,warning=FALSE}
@@ -821,25 +822,338 @@ ggpiestats(
   data=data,
   x = person_education,
   y = person_home_ownership
+=======
+###########################################################
+
+Testy statystyczne
+
+```{r}
+colnames(data)
+
+```
+
+```{r}
+install.packages("reporttools")
+install.packages("ggstatsplot")
+
+
+```
+```{r}
+library(reporttools)
+library(ggstatsplot)
+```
+```{r}
+colnames(data)
+```
+```{r}
+data
+```
+
+```{r}
+ggbetweenstats(
+  data = data,
+  x = previous_loan_defaults_on_file,
+  y = credit_score,
+  type = "np",
+  pairwise.display = "s"
+)
+```
+
+
+```{r}
+
+ggbetweenstats(
+  data = data,
+  x = previous_loan_defaults_on_file,
+  y = loan_percent_income,
+  type = "np",
+  pairwise.display = "s"
+)
+
+```
+
+
+```{r}
+ggbetweenstats(
+  data = data,
+  x = previous_loan_defaults_on_file,
+  y = person_age,
+  type = "np",
+  pairwise.display = "s"
+)
+
+```
+
+
+```{r}
+
+ggbetweenstats(
+  data = data,
+  x = previous_loan_defaults_on_file,
+  y = person_income,
+  type = "np",
+  pairwise.display = "s"
+)
+```
+
+
+```{r}
+ggbetweenstats(
+  data = data,
+  x = loan_status,
+  y = credit_score,
+  type = "np",
+  pairwise.display = "s"
+)
+
+ggbetweenstats(
+  data = data,
+  x = loan_status,
+  y = loan_percent_income,
+  type = "np",
+  pairwise.display = "s"
+)
+
+
+ggbetweenstats(
+  data = data,
+  x = loan_status,
+  y = person_age,
+  type = "np",
+  pairwise.display = "s"
+)
+
+ggbetweenstats(
+  data = data,
+  x = loan_status,
+  y = person_income,
+  type = "np",
+  pairwise.display = "s"
+)
+
+
+
+```
+
+
+```{r}
+
+
+
+
+
+
+ggbetweenstats(
+  data = data,
+  x = loan_status,
+  y = cb_person_cred_hist_length,
+  type = "np",
+  pairwise.display = "s"
+)
+
+ggbetweenstats(
+  data = data,
+  x = loan_status,
+  y = person_emp_exp,
+  type = "np",
+  pairwise.display = "s"
+)
+
+```
+#### tabele kontyngencji
+
+```{r}
+data
+```
+
+
+```{r}
+ggpiestats(
+  data = data,
+  x = loan_status,
+  y = loan_intent,
   
 )
 
 ggpiestats(
+  data = data,
+  x = loan_status,
+  y = person_home_ownership,
+  
+)
+
+ggpiestats(
+  data = data,
+  x = loan_status,
+  y = person_education,
+  
+)
+
+ggpiestats(
+  data = data,
+  x = previous_loan_defaults_on_file,
+  y = person_gender,
+>>>>>>> 3b6b0efa9e15aa4ef4f78a5e3aaac332db43e3b9
+  
+)
+
+ggpiestats(
+<<<<<<< HEAD
   data=data,
   x = loan_intent,
   y = person_home_ownership
+=======
+  data = data,
+  x = previous_loan_defaults_on_file,
+  y = person_education,
+  
+)
+
+ggpiestats(
+  data = data,
+  x = previous_loan_defaults_on_file,
+  y = person_home_ownership,
+>>>>>>> 3b6b0efa9e15aa4ef4f78a5e3aaac332db43e3b9
   
 )
 
 
+<<<<<<< HEAD
 
 
+=======
+```
+
+
+```{r}
+ggbarstats(
+  data = data,
+  x = previous_loan_defaults_on_file,
+  y = person_home_ownership,
+  
+)
+
+```
+Testy na rozkład normalny dla zmiennych numerycznych
+
+
+```{r}
+
+qqnorm(data_filtered$person_income, main = "Wykres QQ - Person Income")
+qqline(data_filtered$person_income, col  ="red")
+
+qqnorm(data_filtered$person_age, main = "Wykres QQ -  person_age")
+qqline(data_filtered$person_age, col  ="red")
+
+qqnorm(data_filtered$person_emp_exp, main = "Wykres QQ - person_emp_exp")
+qqline(data_filtered$person_emp_exp, col  ="red")
+
+qqnorm(data_filtered$loan_amnt, main = "Wykres QQ - loan_amnt")
+qqline(data_filtered$loan_amnt, col  ="red")
+
+qqnorm(data_filtered$loan_int_rate, main = "Wykres QQ - loan_int_rate")
+qqline(data_filtered$loan_int_rate, col  ="red")
+
+qqnorm(data_filtered$cb_person_cred_hist_length, main = "Wykres QQ - cb_person_cred_hist_length")
+qqline(data_filtered$cb_person_cred_hist_length, col  ="red")
+
+qqnorm(data_filtered$credit_score, main = "Wykres QQ - credit_score")
+qqline(data_filtered$credit_score, col  ="red")
+
+qqnorm(data_filtered$credit_score, main = "Wykres QQ - credit_score")
+qqline(data_filtered$credit_score, col  ="red")
+
+```
+
+```{r}
+
+#install.packages("nortest")
+#library(nortest)
+
+ad.test(data_filtered$person_income)
+ad.test(data_filtered$person_age)
+ad.test(data_filtered$person_emp_exp)
+ad.test(data_filtered$loan_amnt)
+ad.test(data_filtered$loan_int_rate)
+ad.test(data_filtered$loan_percent_income)
+ad.test(data_filtered$cb_person_cred_hist_length)
+ad.test(data_filtered$credit_score)
+ad.test(data_filtered$loan_status)
+
+
+set.seed(123)
+large_data <- rnorm(6000)
+ad.test(large_data)
+
+```
+
+Dane numeryczne nie pochodzą z rozkładu normalnego, ponieważ p value jest mniejsze od 0.05. Odrzucamy hipotezę zerową. Powatarzamy to samo dla testu Kolmogorova - Smirnova
+
+```{r}
+lillie.test(data_filtered$person_income)
+lillie.test(data_filtered$person_age)
+lillie.test(data_filtered$person_emp_exp)
+lillie.test(data_filtered$loan_amnt)
+lillie.test(data_filtered$loan_int_rate)
+lillie.test(data_filtered$loan_percent_income)
+lillie.test(data_filtered$cb_person_cred_hist_length)
+lillie.test(data_filtered$credit_score)
+lillie.test(data_filtered$loan_status)
+
+```
+
+
+```{r}
+
+data_filtered$person_income_log <- log(data_filtered$person_income)
+data_filtered$person_age_log <- log(data_filtered$person_age)
+data_filtered$person_emp_exp_log <- log(data_filtered$person_emp_exp)
+data_filtered$loan_amnt_log <- log(data_filtered$loan_amnt)
+data_filtered$loan_int_rate_log <- log(data_filtered$loan_int_rate)
+data_filtered$loan_percent_income_log <- log(data_filtered$loan_percent_income)
+data_filtered$cb_person_cred_hist_length_log <- log(data_filtered$cb_person_cred_hist_length)
+data_filtered$credit_score_log <- log(data_filtered$credit_score)
+data_filtered$loan_status_log <- (data_filtered$loan_status)
+
+
+```
+```{r}
+data_filtered
+```
+
+
+```{r}
+lillie.test(data_filtered$person_income_log)
+lillie.test(data_filtered$person_age_log)
+#lillie.test(data_filtered$person_emp_exp_log)
+lillie.test(data_filtered$loan_amnt_log)
+lillie.test(data_filtered$loan_int_rate_log)
+#lillie.test(data_filtered$loan_percent_income_log)
+lillie.test(data_filtered$cb_person_cred_hist_length_log)
+lillie.test(data_filtered$credit_score_log)
+lillie.test(data_filtered$loan_status_log)
+>>>>>>> 3b6b0efa9e15aa4ef4f78a5e3aaac332db43e3b9
 
 
 ```
 
+<<<<<<< HEAD
 ```{r, include= TRUE, message=FALSE,warning=FALSE}
 ```
 
 ```{r, include= TRUE, message=FALSE,warning=FALSE}
 ```
+=======
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+>>>>>>> 3b6b0efa9e15aa4ef4f78a5e3aaac332db43e3b9
