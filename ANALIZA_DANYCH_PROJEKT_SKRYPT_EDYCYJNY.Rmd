@@ -18,14 +18,14 @@ options(repos = c(CRAN = "https://cran.rstudio.com/"))
 ```
 
 
-Projekt grupowy z przedmiotu Analiza Danych na PG. Celem będzie praca na pliku "kredyty i pożyczki": Czyszczenie danych, eksploracyjna analiza danych, praca na zmiennej celu oraz testy statystyczne. Projekt przygotowany przez: Gabrielę Dąbrowską, Filipa Sidora, Jacka Sawkę
+Projekt grupowy z przedmiotu Analiza Danych na PG. Celem będzie praca na pliku "kredyty i pożyczki": Czyszczenie danych, eksploracyjna analiza danych, praca na zmiennej celu oraz testy statystyczne. Projekt przygotowany przez: 
+Gabriela Dąbrowska - 187146
+Filip Sidor - 185701
+Jacka Sawka - 197326
 
-Instalujemy potrzebne biblioteki
 
 
-Ładujemy biblioteki
-
-```{r, include= TRUE, message=FALSE,warning=FALSE}
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
 library(gtsummary)
 library(tidyverse)
 library(naniar)
@@ -39,23 +39,22 @@ library(dplyr)
 library(kableExtra)
 library(ggstatsplot)
 ```
+Ładujemy biblioteki
 
+ROZDZIAŁ 1. DANE I ICH BRAKI
 
-
-
-Ładujemy dane, na których będziemy pracować. Sprawdzamy strukturę danych, liczności unikalnych wartości oraz tzw. pattern wartości brakujących.
-
-
-```{r, include= FALSE, message=FALSE,warning=FALSE}
+```{r, message=FALSE, warning=FALSE, include=FALSE}
 data <- read.csv("kredyty_new.csv")
 data
 ```
+Ładujemy dane, na których będziemy pracować. 
 
-```{r, include= TRUE, message=FALSE,warning=FALSE}
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
 str(data)
 ```
+Sprawdzamy strukturę danych.
 
-```{r, include= TRUE, message=FALSE,warning=FALSE}
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
 unique(data$person_age)
 unique(data$person_gender)
 unique(data$person_education)
@@ -63,73 +62,72 @@ unique(data$person_home_ownership)
 unique(data$previous_loan_defaults_on_file)
 unique(data$person_age)
 ```
+Sprawdzamy liczności unikalnych wartości.
 
-```{r, include= TRUE, message=FALSE,warning=FALSE}
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
 md.pattern(data)
 ```
+Sprawdzamy tzw. pattern wartości brakujących.
 
-```{r, include= TRUE, message=FALSE,warning=FALSE}
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
 gg_miss_upset(data = data)
 ```
-
 Jak widać, tylko trzy kolumny są dotknięte większymi brakami danych. Będziemy je imputować metodą MICE.
 
-```{r, include= TRUE, message=FALSE,warning=FALSE}
-colnames(data)
-```
 
-Poprawiony wykres przedstawia, że brakami danych dotknięte są kolumny "person_age", "loan_amnt" oraz "credit_Score".
 
-```{r, include= TRUE, message=FALSE,warning=FALSE}
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
 explanatory <- c("person_age","person_income","loan_amnt","loan_percent_income","previous_loan_defaults_on_file","person_gender","person_emp_exp","loan_intent","cb_person_cred_hist_length","person_education","person_home_ownership","loan_int_rate","credit_score")
 dependent <- "loan_status"
 
-# Generowanie wykresu
+
 plot <- data %>% missing_pattern(dependent = dependent, explanatory = explanatory)
 
-# Rozszerzanie wykresu
+
 plot +
   theme(
-    plot.title = element_text(size = 16),  # Większy tytuł
-    axis.text = element_text(size = 14),  # Większe etykiety osi
-    axis.title = element_text(size = 14), # Większe tytuły osi
-    legend.text = element_text(size = 12), # Większy tekst legendy
-    plot.margin = margin(10, 10, 10, 10, "mm"), # Zwiększenie marginesów
+    plot.title = element_text(size = 16),  
+    axis.text = element_text(size = 14),  
+    axis.title = element_text(size = 14), 
+    legend.text = element_text(size = 12), 
+    plot.margin = margin(10, 10, 10, 10, "mm"), 
     panel.spacing = unit(2, "lines")
   )
+```
+Poprawiony wykres przedstawia, że brakami danych dotknięte są kolumny "person_age", "loan_amnt" oraz "credit_Score".
+
+
+```{r, message=FALSE, warning=FALSE, include=FALSE}
+data <- data %>% filter(person_age < 115)
 ```
 
 Postanowiliśmy obciąć maksymalny wiek do 115 lat. Życzymy dwustu lat i więcej, ale ten wiek jest i tak odstający od średniej, co udowodnią późniejsze statystyki.
 
-```{r, include= TRUE, message=FALSE,warning=FALSE}
-data <- data %>% filter(person_age < 115)
-```
-
-```{r, include= TRUE, message=FALSE,warning=FALSE}
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
 unique(data$person_age)
 ```
 
-Tutaj mamy łączną ilość danych brakujących.
 
-```{r, include= TRUE, message=FALSE,warning=FALSE}
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
 sum(is.na(data))
 ```
+Tutaj mamy łączną ilość danych brakujących. Zaradzimy na to.
 
-```{r, include= TRUE, message=FALSE,warning=FALSE}
-colnames(data)
-```
 
-```{r, include= TRUE, message=FALSE,warning=FALSE}
+
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
 gg_miss_var(data) + labs(title = "Braki danych po kolumnach")
 ```
+Jeszcze jedno sprawdzenie danych brakujących.
 
-```{r, include= TRUE, message=FALSE,warning=FALSE}
-colnames(data)
-```
 
-Imputujemy dane brakujące korzystając z funkcji Mice i metody PMM.
 
-```{r, include= TRUE, message=FALSE,warning=FALSE}
+
+
+```{r, message=FALSE, warning=FALSE, include=FALSE}
 
 imputed_data <- mice(data, method = "pmm", m = 5, maxit = 50, seed = 123)
 
@@ -141,21 +139,28 @@ data <- complete(imputed_data, 1)
 
 ```
 
-Sprawdźmy skuteczność imputacji.
+Imputujemy dane brakujące korzystając z funkcji Mice i metody PMM.
 
-```{r, include= TRUE, message=FALSE,warning=FALSE}
+
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
 any(is.na(data))
 
 ```
-
+Sprawdźmy skuteczność imputacji.
 Imputacja zakończona sukcesem.
 
-Kolejnym problemem jest duże odstawanie dochodów. Wynika to z kilku rzeczy. 
-Po pierwsze skala i przedział pozostałych zmiennych (porównajmy w jakim przedziale są poprawne dane wiekowe a dochodowe (nawet intuicyjnie)), po drugie mamy kilku milionerów na pokładzie. 
+ROZDZIAŁ 2. STATYSTYKI OPISOWE.
+
+Kolejnym problemem jest duże odstawanie dochodów. Wynika to z kilku rzeczy:
+
+Po pierwsze skala i przedział pozostałych zmiennych (porównajmy w jakim przedziale są poprawne dane wiekowe a dochodowe (nawet intuicyjnie)). 
+Po drugie mamy kilku milionerów na pokładzie. 
+
 Generalnie w bankowości zarówno produkty finansowe jak i klienci są klastrowani/binowani zgodnie w ich warunkami ekonomicznymi/finansowymi. 
 Tutaj to binowanie nie zostało zrobione, bądź zostało wykonane na tyle słabo, że tworzenie modelu na podstawie tych danych mogłoby dać dość niską moc predykcyjną.
 
-```{r, include= TRUE, message=FALSE,warning=FALSE}
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
 boxplot(data[sapply(data, is.numeric)], 
         main = "Boxploty dla kolumn liczbowych", 
         xlab = "Kolumny", 
@@ -164,13 +169,10 @@ boxplot(data[sapply(data, is.numeric)],
         las = 2)  
 ```
 
-Liczymy podstawowe stastystyki opisowe dla danych numerycznych. 
-Statystyki z kolumn "person_age","person_income","person_emp_exp","loan_amnt","loan_percent_income" sugerują, że dane wniosków kredytowych były zbierane od bardzo młodych ludzi z dość niskimi dochodami i z małym stopniem "zakredytowania", dodatkowo wnioski były na dość małe kwoty. Jeśli faktycznie mielibyśmy modelować de facto pracowniczą młodzież, należałoby się zastanowić czy jest sens pozostawiać w zbiorze osoby bardzo doświadczone i zarabiające duże pieniądze. Jednak ta decyzja nie jest w scope naszego projektu.
+Boxploty dla kolumn liczbowych. Widać drastyczne odstawanie dochodów, to może być zarówno błąd wejścia danych jak i poprawny wpis.
 
 
-
-
-```{r, include= TRUE, message=FALSE,warning=FALSE}
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
 
 
 options(scipen = 999)
@@ -227,11 +229,16 @@ for (col_name in names(numeric_columns)) {
 
 print(all_stats, row.names = FALSE)
 ```
-Wedle statystyk opisowych przeciętną obserwacją według zmiennych numerycznych, to osoba o wieku poniżej 30 lat, z dochodami 80000 rocznie, o doświadczeniu około 5 lat. Kwota wnioskowanego kredytu, to 9500 na oprocentowanie 11%. "Zakredytowanie" to 13%. Historia kredytowa jest pół roku dłuższa od doświadczenia zawodowego. Credit score to 632 a średnia wartość loan_status to 0.22.
+Liczymy podstawowe stastystyki opisowe dla danych numerycznych. 
+Statystyki z kolumn "person_age","person_income","person_emp_exp","loan_amnt","loan_percent_income" sugerują, że dane wniosków kredytowych były zbierane od bardzo młodych ludzi z dość niskimi dochodami i z małym stopniem "zakredytowania", czyli stosunki bieżących zobowiązań do pobieranych dochodów.
+Dodatkowo wnioski były na dość małe kwoty. Jeśli faktycznie mielibyśmy modelować de facto pracowniczą młodzież, należałoby się zastanowić czy jest sens pozostawiać w zbiorze osoby bardzo doświadczone i zarabiające duże pieniądze. Jednak ta decyzja nie jest w scope naszego projektu.
+
+
+Wedle statystyk opisowych przeciętną obserwacją według zmiennych numerycznych, to osoba o wieku poniżej 30 lat, z dochodami 80000 rocznie, o doświadczeniu około 5 lat. Kwota wnioskowanego kredytu to 9500 na oprocentowanie 11%. "Zakredytowanie" to 13%. Historia kredytowa jest pół roku dłuższa od doświadczenia zawodowego. Credit score to 632 a średnia wartość loan_status to 0.22.
 
 Mimo, że jest to zmienna binarna, to jest sugestia, że większość wniosków była odrzucana. Większość zmiennych numerycznych ma bardzo duży rozstrzał oraz skośność i kurtozę.
 
-```{r, include= TRUE, message=FALSE,warning=FALSE}
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
 knitr::kable(all_stats,
              digits = 4,
              align = "lcccc",
@@ -239,31 +246,36 @@ knitr::kable(all_stats,
              col.names = c("Kolumna", "Średnia","Mediana", "Błąd Standardowy","Odchylenie Standardowe", "IQR","OdchylenieIQR","Skośność", "Kurtoza","Min","Max","Q1","Q3","Ujemne?"))
 ```
 
+Tabelka ze statystykami opisowymi pod eksport do raportu.
 
-Tutaj kosmetyczny szczegół, by ułamek dziesiętny zgadzął się i były tego samego stopnia dla wszystkich zmiennych.
 
-```{r, include= TRUE, message=FALSE,warning=FALSE}
+
+```{r, message=FALSE, warning=FALSE, include=FALSE}
 data$loan_int_rate <- data$loan_int_rate / 100
 ```
 
-```{r, include= FALSE, message=FALSE,warning=FALSE}
+Tutaj kosmetyczny szczegół, by ułamek dziesiętny zgadzął się i były tego samego stopnia dla wszystkich zmiennych.
+
+```{r, message=FALSE, warning=FALSE, include=FALSE}
 data
 ```
 
 Tutaj postanowiliśmy jednak obciąć dochód do 1,8 miliona.
 
-```{r, include= TRUE, message=FALSE,warning=FALSE}
+```{r, message=FALSE, warning=FALSE, include=FALSE}
 data <- data %>% filter(person_income < 1800000)
 
 ```
 
-```{r, include= TRUE, message=FALSE,warning=FALSE}
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
 max(data$person_income)
 ```
 
-Te wykresy prezentują liczność obsweracji dla każdej zmiennej katagorycznej. Ważne jest zbadać ich stopień zbalansowania. Generalnie jest OK, poza "person_education" oraz "person_home_ownership", gdzie wystąpują obserwacje o marginalnie małej liczności.
+ROZDZIAŁ 3. WIZUALIZACJA DANYCH.
 
-```{r, include= TRUE, message=FALSE,warning=FALSE}
+
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
 
 categorical_columns <- data[sapply(data, is.character) | sapply(data, is.factor)]
 
@@ -293,9 +305,12 @@ for (col_name in names(categorical_columns)) {
 }
 
 ```
-Jak widać (pod kątem ewentualnego modelowania) Mamy bardzo duży problem niezbalansowania zmiennej celu. Mamy około 10 tysięcy przyznań kredytów do 30 tysięcy odmów. Model klasyfikacyjny byłby przeciążony z punktu widzenia odrzuceń wniosków.
+Te wykresy prezentują liczność obsweracji dla każdej zmiennej katagorycznej. Ważne jest zbadać ich stopień zbalansowania. Generalnie jest OK, poza "person_education" oraz "person_home_ownership", gdzie wystąpują obserwacje o marginalnie małej liczności.
 
-```{r, include= TRUE, message=FALSE,warning=FALSE}
+
+
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
 
 counts <- table(data$loan_status)
 
@@ -306,9 +321,9 @@ barplot(counts,
         main = "Porównanie ilości wystąpień wartości 0 i 1",
         col = c("steelblue", "tomato"))
 ```
- 
+Jak widać (pod kątem ewentualnego modelowania) Mamy bardzo duży problem niezbalansowania zmiennej celu. Mamy około 10 tysięcy przyznań kredytów do 30 tysięcy odmów. Model klasyfikacyjny byłby przeciążony z punktu widzenia odrzuceń wniosków.
 
-```{r, include= TRUE, message=FALSE,warning=FALSE}
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
 boxplot(data[sapply(data, is.numeric)], 
         main = "Boxploty dla kolumn liczbowych", 
         xlab = "Kolumny", 
@@ -316,10 +331,11 @@ boxplot(data[sapply(data, is.numeric)],
         col = "lightblue",
         las = 2) 
 ```
+Boxploty danych numerycznych po ograniczeniu dochodu delikatnie się "podniosły" w innych zmiennych, ale dalej zmienna dochodu jest dominująca i problematyczne pod względem danych odstających.
 
-Jak widać, nie ma już żadnych danych brakujących.
 
-```{r, include= TRUE, message=FALSE,warning=FALSE}
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
 
 gg_miss_var(data) + 
   labs(title = "Braki danych w kolumnach") +
@@ -329,7 +345,9 @@ gg_miss_var(data) +
 summary(data)
 ```
 
-```{r, include= TRUE, message=FALSE,warning=FALSE}
+
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
 explanatory <- c("person_age","person_income","loan_amnt","loan_percent_income","previous_loan_defaults_on_file","person_gender","person_emp_exp","loan_intent","cb_person_cred_hist_length","person_education","person_home_ownership","loan_int_rate","credit_score")
 dependent <- "loan_status"
 
@@ -348,15 +366,14 @@ plot +
   )
 
 ```
+Jak widać, nie ma już żadnych danych brakujących.
 
-Histogramy wieku i dochodu
 
-```{r, include= TRUE, message=FALSE,warning=FALSE}
-colnames(data)
-```
-Nie licząc błędnych histogramów. Widać dość duży problem z rozkładem danych. Jedyna zmienna, która wizualnie przypomina rozkład normalny, z dużą skośnością, to zmienna "credit_score"
 
-```{r, include= TRUE, message=FALSE,warning=FALSE}
+
+
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
 for (i in colnames(data)) {
   if (is.numeric(data[[i]])) {
     p <- ggplot(data, aes_string(x = i)) +
@@ -373,7 +390,7 @@ for (i in colnames(data)) {
 }
 ```
 
-```{r, include= TRUE, message=FALSE,warning=FALSE}
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
 
 ggplot(data, aes(x = person_age)) +
   geom_histogram(binwidth = 5, fill = "blue", color = "black", alpha = 0.7) +
@@ -396,10 +413,12 @@ ggplot(data, aes(x = loan_amnt)) +
 
 
 ```
+Nie licząc błędnych histogramów. Widać dość duży problem z rozkładem danych. Jedyna zmienna, która wizualnie przypomina rozkład normalny, z dużą skośnością, to zmienna "credit_score".
 
-Boxploty dla wieku i dochodu. Dalej występują wartości odstające, ale dopóki nie zdecydujemy się na standaryzację dla wszystkich zmiennych, to nic z tym nie zrobimy. Jednakże standaryzacja powinna mieć miejsce przed samym modelowaniem i po testach statystycznych.
 
-```{r, include= TRUE, message=FALSE,warning=FALSE}
+
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
 
 ggplot(data, aes(y = person_age)) +
   geom_boxplot(fill = "orange", color = "black") +
@@ -413,10 +432,11 @@ ggplot(data, aes(y = person_income)) +
   theme_minimal()
 
 ```
+Boxploty dla wieku i dochodu. Dalej występują wartości odstające, ale dopóki nie zdecydujemy się na standaryzację dla wszystkich zmiennych, to nic z tym nie zrobimy. Jednakże standaryzacja powinna mieć miejsce przed samym modelowaniem i po testach statystycznych.
 
-Ten sam wykres liczności
 
-```{r, include= TRUE, message=FALSE,warning=FALSE}
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
 
 ggplot(data, aes(x = loan_intent)) +
   geom_bar(fill = "purple", color = "black") +
@@ -431,16 +451,9 @@ ggplot(data, aes(x = person_home_ownership)) +
 
 
 ```
+Ten sam wykres liczności danych kategorycznych, co przedstawiony wczesniej
 
-
-Wykres dochód vs. kwota pożyczki vs. posiadanie domu (status) / intencja kredytu / historia poprzednich defaltuów.
-
-Wniosków jest kilka: 
-1. Bez względu na kwotę wnioskowanej pożyczki osoby o mniejszych dochodach żyją w mieszkaniach wynajmowanych. Na pewnym poziomie dochódów dochodzi do odcięcia i ludzie zaczynają żyć na domach wziętych pod kredyt hipoteczny. 
-2. Intencja kredytu nie zmienia się wraz z kwotą i dochodami, wszędzie występują te same intencje. 
-3. Bez względu na kwotę wnioskwoanej pożyczki osoby o mniejszych dochodach mają mniejszą tendencję do wpadania w defaulty. Na pewnym poziomie dochodów dochodzi do odcięcia i ludzie zaczynają odnotowalnie wpadać w defalty. Może to wynikać z sugerowanego faktu, iż osoby o małych dochodach nie wpadły wcześniej w defalty, ponieważ nie miały wcześniej kredytów do spłaty.
-
-```{r, include= TRUE, message=FALSE,warning=FALSE}
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
 
 
 ggplot(data, aes(x = person_income, y = loan_amnt, color=person_home_ownership)) +
@@ -469,12 +482,19 @@ ggplot(data, aes(x = person_income, y = loan_amnt, color=previous_loan_defaults_
 
 ```
 
-Różne wykresy wartości sytuacji demograficznych vs. parametrów aplikacyjnych i danych ekonomicznych.
-Najbardziej czytelny wykres to dochód vs. wynik kredytowy vs. dotychczasowe defaulty klienta. 
-Mamy formację piramidalną, Gdzie dochód najbardziej wyrasta paradoksalnie z przeciętnego wyniku kredytowego. 
-Defaulty w historii kredytowej są zauważalne dopiero od pewnej powyżej minimalnej wartości obserwowalnych dochodów.
+Wykres dochód vs. kwota pożyczki vs. posiadanie domu (status) / intencja kredytu / historia poprzednich defaltuów.
 
-```{r, include= TRUE, message=FALSE,warning=FALSE}
+Wniosków jest kilka: 
+1. Bez względu na kwotę wnioskowanej pożyczki osoby o mniejszych dochodach żyją w mieszkaniach wynajmowanych. Na pewnym poziomie dochódów dochodzi do odcięcia i ludzie zaczynają żyć na domach wziętych pod kredyt hipoteczny. 
+2. Intencja kredytu nie zmienia się wraz z kwotą i dochodami, wszędzie występują te same intencje. 
+3. Bez względu na kwotę wnioskwoanej pożyczki osoby o mniejszych dochodach mają mniejszą tendencję do wpadania w defaulty. Na pewnym poziomie dochodów dochodzi do odcięcia i ludzie zaczynają odnotowalnie wpadać w defalty. Może to wynikać z sugerowanego faktu, iż osoby o małych dochodach nie wpadły wcześniej w defalty, ponieważ nie miały wcześniej kredytów do spłaty.
+
+
+
+
+
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
 ggplot(data, aes(x = person_age, y = loan_amnt, color=person_home_ownership)) +
   geom_point(alpha = 0.9) +
   labs(title = "Wiek vs Kwota pożyczki",
@@ -500,10 +520,15 @@ ggplot(data, aes(x = person_income, y = credit_score, color=previous_loan_defaul
   theme_minimal()
 
 ```
+Różne wykresy wartości sytuacji demograficznych vs. parametrów aplikacyjnych i danych ekonomicznych.
+Najbardziej czytelny wykres to dochód vs. wynik kredytowy vs. dotychczasowe defaulty klienta (wykres 3). 
+Mamy formację piramidalną, Gdzie dochód najbardziej wyrasta paradoksalnie z przeciętnego wyniku kredytowego. 
+Defaulty w historii kredytowej są zauważalne dopiero od pewnej powyżej minimalnej wartości obserwowalnych dochodów.
 
-Heatmapa korelacji dla danych numerycznych. Dość duża korelacja występuje między danymi: person_age - person_emp_exp , person_age - cb_person_cred_hist_length , person_emp_exp - cb_person_cred_hist_length. Intuicyjnie ma to sens.
 
-```{r, include= TRUE, message=FALSE,warning=FALSE}
+
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
 
 numeric_data <- data %>% select_if(is.numeric)
 
@@ -516,11 +541,11 @@ corrplot(cor_matrix, method = "color", type = "upper", tl.cex = 0.8)
 
 
 ```
+Heatmapa korelacji dla danych numerycznych. Dość duża korelacja występuje między danymi: person_age - person_emp_exp , person_age - cb_person_cred_hist_length , person_emp_exp - cb_person_cred_hist_length. Intuicyjnie ma to sens.
 
-Wykresy punktowe z nałożoną funkcją regresyjną. 
-Brak nowych wniosków poza jednym, gdzie bardzo wysokie kwoty pożyczej są na dość niskie oprocentowania, wynikające prawdopodobnie z niskiego ryzyka kredytowego klienta. Relacja wieku i historii kredytowej niemalże doskonale liniowa.
 
-```{r, include= TRUE, message=FALSE,warning=FALSE}
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
 library(ggplot2)
 
 ggplot(data, aes(x = person_income, y = loan_amnt, color=loan_intent)) +
@@ -546,16 +571,17 @@ ggplot(data, aes(x = person_age, y = cb_person_cred_hist_length)) +
 
 
 ```
+Wykresy punktowe z nałożoną funkcją regresyjną. 
+Brak nowych wniosków poza jednym, gdzie bardzo wysokie kwoty pożyczej są na dość niskie oprocentowania, oprocentowanie maleje, wynikające prawdopodobnie z niskiego ryzyka kredytowego klienta (wykres 2.). Relacja wieku i historii kredytowej niemalże doskonale liniowa(wykres 3.).
 
-```{r, include= TRUE, message=FALSE,warning=FALSE}
+
+
+```{r, message=FALSE, warning=FALSE, include=FALSE}
 data %>% colnames()
 ```
 
-Wykresy dochód vs kwota pożyczki oraz obciążenie kredytem vs. kwota kredytu. 
-Obciążenie kredytem vs. kwota kredytu ma zauważalną liniową relację z dużym błędem. 
-W przypadku dochód vs kwota pożyczki błąd wizualny jest zbyt duży, by określić liniową zależność.
 
-```{r, include= TRUE, message=FALSE,warning=FALSE}
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
 
 ggplot(data, aes(x =person_emp_exp , y = person_income)) +
   geom_point(alpha = 0.6, color = "blue") +
@@ -573,14 +599,18 @@ ggplot(data, aes(x = loan_percent_income, y = loan_amnt)) +
 
 
 ```
+Wykresy dochód vs kwota pożyczki oraz obciążenie kredytem vs. kwota kredytu. 
+Obciążenie kredytem vs. kwota kredytu ma zauważalną liniową relację z dużym błędem(wykres 2.). 
+W przypadku dochód vs kwota pożyczki błąd wizualny jest zbyt duży, by określić liniową zależność(wykres 3.).
 
-```{r, include= TRUE, message=FALSE,warning=FALSE}
+
+```{r, message=FALSE, warning=FALSE, include=FALSE}
 data %>% colnames()
 ```
 
-Wykres doświadczenie vs. kwota kredytu pokazuje raczej, że największe kwoty kredytu są brane wnioskowane przez klientów o małym doświadczeniu zawodowym.
 
-```{r, include= TRUE, message=FALSE,warning=FALSE}
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
 
 
 
@@ -591,10 +621,11 @@ ggplot(data, aes(x =person_emp_exp , y =loan_amnt )) +
   theme_minimal()
 
 ```
+Wykres doświadczenie vs. kwota kredytu pokazuje raczej, że największe kwoty kredytu są brane wnioskowane przez klientów o małym doświadczeniu zawodowym.
 
-Wykres cel kredytu vs doświadczenie jest nieinformatywny, lecz widać wartości odstające formujące się we wniosek, że osoby o dużym doświadczeniu (osoby starsze) biorą dużo kredytów w celu pokrycia zobowiązań za usługi medyczne.
 
-```{r, include= TRUE, message=FALSE,warning=FALSE}
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
 ggplot(data, aes(x =loan_intent , y =person_emp_exp )) +
   geom_point(alpha = 0.6, color = "blue") +
   geom_smooth(method = "lm", se = TRUE, color = "red") +
@@ -602,10 +633,12 @@ ggplot(data, aes(x =loan_intent , y =person_emp_exp )) +
   theme_minimal()
 
 ```
+Wykres cel kredytu vs doświadczenie jest nieinformatywny, lecz widać wartości odstające formujące się we wniosek, że osoby o dużym doświadczeniu (osoby starsze) biorą dużo kredytów w celu pokrycia zobowiązań za usługi medyczne.
 
-Tutaj też widać, że osoby doświadczone (starsze) mają tendencję do mieszkaniu w wynajętych domach.
 
-```{r, include= TRUE, message=FALSE,warning=FALSE}
+
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
 
 
 ggplot(data, aes(x =person_home_ownership , y =person_emp_exp )) +
@@ -616,9 +649,12 @@ ggplot(data, aes(x =person_home_ownership , y =person_emp_exp )) +
 
 ```
 
-Histogram kwoty pożyczki w zależności od wczesniejszych defaultów. Widać, że zachowana jest pewna proporcja i im więcej wystąpień o daną kwotę pożyczki tym więcej było historii defaultu na daną kwotę, vide 10 000 dolarów.
+Tutaj też widać, że osoby doświadczone (starsze) mają tendencję do mieszkaniu w wynajętych domach.
 
-```{r, include= TRUE, message=FALSE,warning=FALSE}
+
+
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
 ggplot(data, aes(x = loan_amnt, fill = previous_loan_defaults_on_file)) +
   geom_histogram(binwidth = 100, alpha = 0.7) +
   labs(
@@ -629,10 +665,11 @@ ggplot(data, aes(x = loan_amnt, fill = previous_loan_defaults_on_file)) +
   ) +
   theme_minimal()
 ```
+Histogram kwoty pożyczki w zależności od wczesniejszych defaultów. Widać, że zachowana jest pewna proporcja i im więcej wystąpień o daną kwotę pożyczki tym więcej było historii defaultu na daną kwotę, vide 10 000 dolarów.
 
-Ten sam histogram z użyciem pakietu plotly, niestety interfejs jest mało intuicyjny.
 
-```{r, include= TRUE, message=FALSE,warning=FALSE}
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
 
 library(plotly)
 
@@ -651,14 +688,17 @@ p <- ggplot(data, aes(x = loan_amnt, fill = previous_loan_defaults_on_file)) +
 ggplotly(p)
 ```
 
+Ten sam histogram z użyciem pakietu plotly, niestety interfejs jest mało intuicyjny.
+
+
+ROZDZIAŁ 4. PRACA NA ZMIENNEJ CELU.
+
 
 Ponieważ dane do pracy zawierają binarną zmienną celu "loan_status" stworzoną stricte pod model klasyfikacyjny uczenia maszynowego, dokonam teraz zestawu wizualnych analiz dla wspomnianych wcześniej zmiennych objasniających, by (być może) dokonać intuycyjnego sprawdzenia jakie parametry przyczyniają się do pozytywnej decyzji ws. przyznania krdytu. Oczywiście takie sprawdzenie bez odbpowiedniego, numerycznego algorytmu klasyfikacyjnego nie ma żadnej mocy predykcyjnej, ale dokonanie jej może w pewnien sposób zawęzić spektrum istotnych i ciążących na decyzji zmiennych.
 
-```{r, include= TRUE, message=FALSE,warning=FALSE}
-colnames(data)
-```
 
-```{r, include= TRUE, message=FALSE,warning=FALSE}
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
 ggplot(data, aes(x = person_age, y = loan_amnt, color=loan_status)) +
   geom_point(alpha = 0.9) +
   labs(title = "Wiek vs Kwota pożyczki",
@@ -740,35 +780,32 @@ ggplot(data, aes(x = loan_int_rate, y = person_income, color=loan_status)) +
   theme_minimal()
 
 
+
+
+
 ```
 
 WNIOSEK: Jaki nasuwa się z analizy danych jest następujący:
 O przyznawalności kredytów najprawdopodobniej nie decydyją parametry beharwioralne.
-Oczywiście historia defaultów jest czynnikiem przekreślającym możliwość przynania kredytu. 
+Oczywiście historia defaultów jest czynnikiem przekreślającym możliwość przynania kredytu(wykres 3.). 
 Moim zdaniem jest to program preferencyjnych kredytów np. przyznawanych przez gminę/urząd miasta/community. 
-Być może jest to program tzw. kredytów preferencyjnych, które mają bardzo dobrą ofertę (są tanie), ale jest ograniczona pula przyznań i wydawane są tylko dla ludzi o określonych (dość niskich) dochodach, krótkiej, ale nienagannej historii kredytowej bez własnego domu i z dość krótkim doświadczeniem zawodowym. Ciekawy jest wniosek z wykresu obciązenie kredytem vs. dochody vs. status przyznania kredytu. Tutaj przyznawalność jest zdecydowanie udzielana dla niskich dochodów, ale nawet przy dużym stopniu obciążenia dotychczasowymi pożyczkami.
+Być może jest to program tzw. kredytów preferencyjnych, które mają bardzo niski próg przyznawalności (kosztem wysokiego oprocentowania, z racji ryzyka w.w. czynników), ale jest ograniczona pula przyznań i wydawane są tylko dla ludzi o określonych (dość niskich) dochodach, krótkiej ale nienagannej historii kredytowej bez własnego domu i z dość krótkim doświadczeniem zawodowym. Ciekawy jest wniosek z wykresu obciązenie kredytem vs. dochody vs. status przyznania kredytu(wykres 7.). Tutaj przyznawalność jest zdecydowanie udzielana dla niskich dochodów, ale nawet przy dużym stopniu obciążenia dotychczasowymi pożyczkami.
 
-testy statystyczne. 
-
-```{r,include= TRUE, message=FALSE,warning=FALSE}
-colnames(data)
-
-```
+ROZDZIAŁ 5. TESTY STATYSTYCZNE. 
 
 
-```{r,include= TRUE, message=FALSE,warning=FALSE}
+
+```{r, warning=FALSE, include=FALSE, message=FALSE}
 library(reporttools)
 library(ggstatsplot)
 ```
 
-```{r,include= TRUE, message=FALSE,warning=FALSE}
-colnames(data)
-```
-```{r,include= FALSE, message=FALSE,warning=FALSE}
+
+```{r, warning=FALSE, message=FALSE, include=FALSE}
 data
 ```
 
-```{r,include= TRUE, message=FALSE,warning=FALSE}
+```{r, echo=TRUE, warning=FALSE, message=FALSE}
 ggbetweenstats(
   data = data,
   x = previous_loan_defaults_on_file,
@@ -777,10 +814,11 @@ ggbetweenstats(
   pairwise.display = "s"
 )
 ```
-Widocznie wyższy credit score dla obserwacji, które nie miało defaultów. Moim zdaniem ta różnica jest zauważalna, ale zbyt mała.
+Widocznie wyższy credit score dla obserwacji, które nie miały defaultów. Moim zdaniem ta różnica jest zauważalna, ale zbyt mała.
 Ciężko stwierdzić jaka jest metodologia liczenia credit score. Populacje są zbalansowane.
 
-```{r,include= TRUE, message=FALSE,warning=FALSE}
+
+```{r, echo=TRUE, warning=FALSE, message=FALSE}
 
 ggbetweenstats(
   data = data,
@@ -791,9 +829,9 @@ ggbetweenstats(
 )
 
 ```
-To jest ciekawe. Mianowicie osoby bardziej "zakredytowane" to te, które przeciętnie miały defaulty w historii kredytowej. Populacje są licznościowo zbalansowane.
+To jest ciekawe. Mianowicie osoby mniej "zakredytowane" to te, które przeciętnie miały defaulty w historii kredytowej. Populacje są licznościowo zbalansowane.
 
-```{r,include= TRUE, message=FALSE,warning=FALSE}
+```{r, echo=TRUE, warning=FALSE, message=FALSE}
 ggbetweenstats(
   data = data,
   x = previous_loan_defaults_on_file,
@@ -805,7 +843,7 @@ ggbetweenstats(
 ```
 Brak różnicy w medianie wieku między osobami o nienagannej historii kredytowej względem tych, co mieli defaulty. Populacje są zbalansowane.
 
-```{r,include= TRUE, message=FALSE,warning=FALSE}
+```{r, echo=TRUE, warning=FALSE, message=FALSE}
 
 ggbetweenstats(
   data = data,
@@ -817,7 +855,7 @@ ggbetweenstats(
 ```
 Tutaj zgodnie z wcześniej zauważoną obserwacją. Osoby o wyższej medianie dochodów mieli defaulty w historii. Populacje są zbalansowane.
 
-```{r,include= TRUE, message=FALSE,warning=FALSE}
+```{r, echo=TRUE, warning=FALSE, message=FALSE}
 ggbetweenstats(
   data = data,
   x = loan_status,
@@ -856,13 +894,13 @@ ggbetweenstats(
 ```
 Tutaj zestaw wykresów credit_score/loan_percent_income/person_age vs. loan_status.
 
-Co ciekawe, credit score nie ma związku na przyznawalność kredytu, wpisuje się to we wspomnianą wcześniej teorię.
-Drugi wykres pokazuje bardzo szeroki rozkład loan_percent_income względem przyznanych kredytów.
-Wiek vs status kredytu nie wnosi żadnych informacji.
-Z kolei dochód vs status kredytu pokazuje ewidentnie, że osoby o niżsych dochodach otrzymywały przyznanie kredytu, co róznież wpisuje się w teorię.
+Co ciekawe, credit score nie ma związku na przyznawalność kredytu, wpisuje się to we wspomnianą wcześniej teorię (wykres 1.).
+Drugi wykres pokazuje bardzo szeroki rozkład loan_percent_income względem przyznanych kredytów (wykres 2.).
+Wiek vs status kredytu nie wnosi żadnych informacji (wykres 3.).
+Z kolei dochód vs status kredytu pokazuje ewidentnie, że osoby o niżsych dochodach otrzymywały przyznanie kredytu, co róznież wpisuje się w teorię (wykres 4).
 
 
-```{r,include= TRUE, message=FALSE,warning=FALSE}
+```{r, echo=TRUE, warning=FALSE, message=FALSE}
 
 
 
@@ -883,16 +921,17 @@ ggbetweenstats(
 )
 
 ```
-Historia kredytowa i doświadczenie vs status kredytu nie wnoszą zbyt wielu informacji, poza sugestią, że mniejsza o jedną jednostkę mediany doświadczenia zawodowego dotyczy przyznanych wniosków kredytowych.
+Historia kredytowa i doświadczenie vs status kredytu nie wnoszą zbyt wielu informacji, poza sugestią(wykres 2.), że mniejsza o jedną jednostkę mediany doświadczenia zawodowego dotyczy przyznanych wniosków kredytowych.
 
-Tabele kontyngencji
 
-```{r,include= FALSE, message=FALSE,warning=FALSE}
+
+```{r, warning=FALSE, message=FALSE, include=FALSE}
 data
 ```
 
+Wykresy kołowe różnych zmiennych kategorycznych vs. status kredytu i historia defaultów.
 
-```{r,include= TRUE, message=FALSE,warning=FALSE}
+```{r, echo=TRUE, warning=FALSE, message=FALSE}
 ggpiestats(
   data = data,
   x = loan_status,
@@ -900,13 +939,22 @@ ggpiestats(
   
 )
 
+```
+
+W pierwszym wykresie nie widać za dużych anomalii względem intencji kredytu a statusem. Po prostu mniejszość wniosków została rozpatrzona pozytywnie z największą przyznawalnością dla "konsolidacji długu".
+
+```{r, echo=TRUE, warning=FALSE, message=FALSE}
 ggpiestats(
   data = data,
   x = loan_status,
   y = person_home_ownership,
   
 )
+```
 
+Drugi wykres pokazuje zdecydowaną dominację akceptacji wniosków dla osób mieszkających w wynajmowanych mieszkaniach i "innych"
+
+```{r, echo=TRUE, warning=FALSE, message=FALSE}
 ggpiestats(
   data = data,
   x = loan_status,
@@ -914,6 +962,11 @@ ggpiestats(
   
 )
 
+```
+
+Trzeci wykres nie wnosi anomalii względem wykształcenia vs statusu kredytu
+
+```{r, echo=TRUE, warning=FALSE, message=FALSE}
 ggpiestats(
   data = data,
   x = previous_loan_defaults_on_file,
@@ -921,6 +974,12 @@ ggpiestats(
   
 )
 
+```
+
+Czwarty wykres pokazuje równe zbalansowanie płci i historii defaultów.
+
+```{r, echo=TRUE, warning=FALSE, message=FALSE}
+
 ggpiestats(
   data = data,
   x = previous_loan_defaults_on_file,
@@ -928,6 +987,12 @@ ggpiestats(
   
 )
 
+```
+
+Piąty wykres pokazuje również równe zbalansowanie wykształcenia względem historii defaultów.
+
+
+```{r, echo=TRUE, warning=FALSE, message=FALSE}
 ggpiestats(
   data = data,
   x = previous_loan_defaults_on_file,
@@ -937,21 +1002,9 @@ ggpiestats(
 
 
 ```
-Wykresy kołowe różnych zmiennych kategorycznych vs. status kredytu i historia defaultów.
-
-W pierwszym wykresie nie widać za dużych anomalii względem intencji kredytu a statusem. Po prostu mniejszość wniosków została rozpatrzona pozytywnie z największą przyznawalnością dla "konsolidacji długu".
-
-Drugi wykres pokazuje zdecydowaną dominację akceptacji wniosków dla osób mieszkających w wynajmowanych mieszkaniach i "innych"
-
-Trzeci wykres nie wnosi anomalii względem wykształcenia vs statusu kredytu
-
-Czwarty wykres pokazuje równe zbalansowanie płci i historii defaultów.
-
-Piąty wykres pokazuje również równe zbalansowanie wykształcenia względem historii defaultów.
-
 Ostatni wykres pokazuje, że najwięcej defaultów mieli klienci, którzy mieli własne mieszkana bądź wzięte pod hipotekę.
 
-```{r,include= TRUE, message=FALSE,warning=FALSE}
+```{r, echo=TRUE, warning=FALSE, message=FALSE}
 ggbarstats(
   data = data,
   x = previous_loan_defaults_on_file,
@@ -960,10 +1013,12 @@ ggbarstats(
 )
 
 ```
-Testy na rozkład normalny dla zmiennych numerycznych. Względem wykresu QQ, większość zmiennych numerycznych odstaje mocno od rozkładu normalnego.Jedynie credit_score jest bliski normalnego, co było sugerowane wcześniej.
+Przedstawienie ostatniego wykresu w formie słupkowej-stackowanej (relacyjnej)
 
 
-```{r,include= TRUE, message=FALSE,warning=FALSE}
+
+
+```{r, echo=TRUE, warning=FALSE, message=FALSE}
 
 qqnorm(data$person_income, main = "Wykres QQ - Person Income")
 qqline(data$person_income, col  ="red")
@@ -990,11 +1045,13 @@ qqnorm(data$credit_score, main = "Wykres QQ - credit_score")
 qqline(data$credit_score, col  ="red")
 
 ```
+Testy na rozkład normalny dla zmiennych numerycznych. Względem wykresu QQ, większość zmiennych numerycznych odstaje mocno od rozkładu normalnego.Jedynie credit_score jest bliski normalnego, co było sugerowane wcześniej(Wykres 8.).
 
-Test Anderson-Darling na rozkład normalny dla zmiennych numerycznych potwierdza wniosek wyprowadzony przez Q-Q plot. Zmienne nie mają rozkładu normalnego. Na dole kodu test dla hipotetycznego rozkładu normalnego, by udowodnić dobry kierunek interpretacji p-value.
 
 
-```{r,include= TRUE, message=TRUE,warning=FALSE}
+
+
+```{r, echo=TRUE, warning=FALSE, message=TRUE}
 
 
 library(nortest)
@@ -1016,11 +1073,12 @@ ad.test(large_data)
 
 ```
 
-Dane numeryczne nie pochodzą z rozkładu normalnego, ponieważ p value jest mniejsze od 0.05. Odrzucamy hipotezę zerową. Powatarzamy to samo dla testu Kolmogorova - Smirnova.
+Test Anderson-Darling na rozkład normalny dla zmiennych numerycznych potwierdza wniosek wyprowadzony przez Q-Q plot. Zmienne nie mają rozkładu normalnego. Na dole kodu test dla hipotetycznego rozkładu normalnego, by udowodnić dobry kierunek interpretacji p-value.
 
-Test Kolmogorova - Smirnova potwierdza brak rozkładu normalnego.
 
-```{r,include= TRUE, message=TRUE,warning=FALSE}
+
+
+```{r, echo=TRUE, warning=FALSE, message=TRUE}
 lillie.test(data$person_income)
 lillie.test(data$person_age)
 lillie.test(data$person_emp_exp)
@@ -1037,11 +1095,12 @@ lillie.test(large_data)
 
 ```
 
+Dane numeryczne nie pochodzą z rozkładu normalnego, ponieważ p value jest mniejsze od 0.05. Odrzucamy hipotezę zerową. Powatarzamy to samo dla testu Kolmogorova - Smirnova.
+Test Kolmogorova - Smirnova potwierdza brak rozkładu normalnego.
 
-Ostatnie podejście to przerobienie zmiennych numerycznych na logarytmy naturalne i przetestowanie ich w oparciu o test Kolmogorova-Smirnova
 
 
-```{r,include= TRUE, message=FALSE,warning=FALSE}
+```{r, echo=TRUE, warning=FALSE, message=FALSE}
 
 data$person_income_log <- log(data$person_income)
 data$person_age_log <- log(data$person_age)
@@ -1055,12 +1114,16 @@ data$loan_status_log <- (data$loan_status)
 
 
 ```
-```{r,include= FALSE, message=FALSE,warning=FALSE}
+
+Ostatnie podejście to przerobienie zmiennych numerycznych na logarytmy naturalne i przetestowanie ich w oparciu o test Kolmogorova-Smirnova
+
+
+```{r, warning=FALSE, message=FALSE, include=FALSE}
 data
 ```
-Test Kołmogorova - Smirnova dla zlogarytmowanych zmiennych nie wykazał poprawy jeśli chodzi o rozkład normalny.
 
-```{r,include= TRUE, message=FALSE,warning=FALSE}
+
+```{r, echo=TRUE, warning=FALSE, message=FALSE}
 lillie.test(data$person_income_log)
 lillie.test(data$person_age_log)
 lillie.test(data$loan_amnt_log)
@@ -1071,10 +1134,11 @@ lillie.test(data$loan_status_log)
 
 
 ```
+Test Kołmogorova - Smirnova dla zlogarytmowanych zmiennych nie wykazał poprawy jeśli chodzi o rozkład normalny.
 
-Anderson-Darling również nie wykazał poprawy pod względem normalności rozkładu zmiennych.
 
-```{r,include= TRUE, message=FALSE,warning=FALSE}
+
+```{r, echo=TRUE, warning=FALSE, TRUE, message=FALSE}
 ad.test(data$person_income_log)
 ad.test(data$person_age_log)
 ad.test(data$loan_amnt_log)
@@ -1084,11 +1148,7 @@ ad.test(data$credit_score_log)
 ad.test(data$loan_status_log)
 
 ```
+Anderson-Darling również nie wykazał poprawy pod względem normalności rozkładu zmiennych.
 
-
-```{r}
-```
-
-
-```{r}
-```
+I TO BY BYŁO NA TYLE :)))))))))))))))
+28.01.2025
